@@ -1,0 +1,17 @@
+{
+	"target": "opensuse",
+
+	"config": {
+		"cloud-init": {
+			"user": "opensuse"
+		},
+
+		"packages": {
+			"pkgmgr": "/usr/bin/zypper",
+			"args": "--non-interactive",
+			"installed": ["cloud-init"]
+		}
+	}
+
+	
+}
