@@ -307,7 +307,7 @@ if __name__ == "__main__":
             if os.path.exists("/usr/bin/systemctl"):
                 call(["/usr/bin/systemctl", "enable", "cloud-init"])
         elif release in DEB_OSS:
-            continue
+            print()
 
         logging.info("c= Cleaning up Packages =========================")
         if release in EPEL_OSS:
