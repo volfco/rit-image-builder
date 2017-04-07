@@ -198,6 +198,10 @@ if __name__ == "__main__":
     writeFile("{0}/etc/issue".format(MNT_DIR), issue)
     writeFile("{0}/BUILD.txt".format(MNT_DIR), UUID)
 
+    logging.info("== Writing MOTD =================================")
+    motd = "Build Date  {0} ({1})\n".format(BUILDTIME, UUID)
+    writeFile("{0}/etc/motd".format(MNT_DIR), motd)
+
     logging.info("== Copying SSL CA Certificates ==================")
     # Copy SSL Certificates
     if os.path.exists("{0}/usr/local/share/ca-certificates/".format(MNT_DIR)):
@@ -233,7 +237,7 @@ if __name__ == "__main__":
         CACommand = "/usr/sbin/update-ca-certificates"
 
     logging.info("CA Store Update Command: " + CACommand)
-    BOOTFILE = TEMPLATE_ENVIRONMENT.get_template('boot.tmpl.sh').render(release=release, username=username, password=release)
+    BOOTFILE = TEMPLATE_ENVIRONMENT.get_template('boot.tmpl.sh').render(release=release, username=username, password=release, CACommand=CACommand)
 
     logging.info("== Chrooting into image =========================")
     with pychroot.Chroot(MNT_DIR):
@@ -307,28 +311,19 @@ if __name__ == "__main__":
             if os.path.exists("/usr/bin/systemctl"):
                 call(["/usr/bin/systemctl", "enable", "cloud-init"])
         elif release in DEB_OSS:
-            print()
+            pass
 
         logging.info("c= Cleaning up Packages =========================")
         if release in EPEL_OSS:
             call(["/usr/bin/yum", "clean", "all"])
 
+        logging.info("c= Regenerating Certificate Store ===============")
+        call(CACommand)
+
         logging.info("c= Preping Image (vRA) ==========================")
         if args.target == "vra":
-            logging.info("Rebuilding CA Store...")
-            call(CACommand)
+            logging.info("Setting root password")
+            call("echo", "root:Student1!", "|", "chpasswd")
 
     logging.info("== Unmounting ===================================")
-    call(["umount", MNT_DIR])
-
-    logging.info("== Cleaning Filesystem ==========================")
-    logging.debug("Trying fsck")
-    fsckr = call(["fsck", partition])
-    if fsckr is not 0:
-        logging.warning("fsck failed. Assuming invalid FileSystem")
-        logging.debug("Trying xfs_repair")
-        xfsr = call(["xfs_repair", partition])
-
-    logging.info("== Disconnecting ================================")
-    # call(["qemu-nbd", "--disconnect", NBDDevice])
     call(["umount", MNT_DIR])
