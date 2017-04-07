@@ -84,6 +84,20 @@ def findLineAppend(filepath, search, append, all=True):
     fhw.write("\n".join(lines))
     fhw.close()
 
+def replaceInFile(filepath, search, replace):
+    fh = open(filepath, 'r')
+    lines = []
+    for line in fh.readlines():
+        tl = line.rstrip()
+        if search in line:
+            tl.replace(search, replace)
+        lines.append(tl)
+    fh.close()
+    fhw = open(filepath, 'w')
+    print("\n".join(lines))
+    fhw.write("\n".join(lines))
+    fhw.close()
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='')
     parser.add_argument('--download', action='store_true')
@@ -201,6 +215,10 @@ if __name__ == "__main__":
     logging.info("== Writing MOTD =================================")
     motd = "Build Date  {0} ({1})\n".format(BUILDTIME, UUID)
     writeFile("{0}/etc/motd".format(MNT_DIR), motd)
+
+    logging.info("== Removing Serial Console References ===========")
+
+    replaceInFile("console=ttyS0,115200", "")
 
     logging.info("== Copying SSL CA Certificates ==================")
     # Copy SSL Certificates
